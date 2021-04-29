@@ -29,8 +29,8 @@ What script does:
 
 ## Testing
 To test if server works, open <b>localhost</b> in your browser.
-You can login to admin account in <b>localhost/admin</b>.
-<b>Login: admin</b>
+You can login to admin account in <b>localhost/admin</b>.  
+<b>Login: admin</b>  
 <b>Pass: admin123</b>
 
 ## Setup elasticsearch
