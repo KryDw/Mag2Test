@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./www:/var/www/html
+    depends_on:
+      - php-fpm
+      - mysql
+      - redis-cache
+      - redis-session
+      - elasticsearch
+    networks:
+      - magento2
+    
+  php-fpm:
+    ## Official image lacks extensions, using custom build
+    #image: php:7.3-fpm  
+    build: './dockerfile/php7.3-fpm-ext'
+    container_name: php-fpm
+    restart: always
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      - mysql
+      - redis-cache
+      - redis-session
+    networks:
+      - magento2
+
+  redis-cache:
+    image: redis:5
+    container_name: redis-cache
+    restart: always
+    command: --port 6380 --appendonly yes
+    ports:
+      - "6380:6380"
+    volumes:
+      - ./redis/cache:/data
+    networks:
+      - magento2
+  
+  redis-session:
+    image: redis:5
+    container_name: redis-session
+    restart: always
+    command: --port 6390 --appendonly yes
+    ports:
+      - "6390:6390"
+    volumes:
+      - ./redis/session:/data
+    networks:
+      - magento2
+  
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    restart: always
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 'test123'
+      #MYSQL_RANDOM_ROOT_PASSWORD: 'true'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'false'
+      MYSQL_DATABASE: 'magento'
+      MYSQL_USER: 'magento'
+      MYSQL_PASSWORD: 'magento123'
+    networks:
+      - magento2
+  
+  elasticsearch:
+    image: elasticsearch:7.12.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: always
+    environment:
+      discovery.type: single-node
+    networks:
+      - magento2
+  
+  
+networks:
+  magento2:
+    name: magento2
+    driver: bridge
